@@ -1,0 +1,88 @@
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+credit_card_data = pd.read_csv('creditcard.csv')
+#print(credit_card_data.head())
+
+print(credit_card_data.info())
+
+#Checking for the missing values in the dataset
+print(credit_card_data.isnull().sum())
+print(credit_card_data['Class'].value_counts())
+
+'''
+Separating the data for analysis
+'''
+#Inspecting the data for analysis
+legit_transactions = credit_card_data[credit_card_data.Class == 0]
+fraud_transactions = credit_card_data[credit_card_data.Class == 1]
+
+print(fraud_transactions.shape)
+print(legit_transactions.shape)
+
+# Getting some statistical informations about the data
+print(legit_transactions.Amount.describe())
+
+'''
+**count** = Total number of legit transactions occured
+**mean** = avg of the total number of transactions
+**std** = standard deviation of the transactions
+**min** = minimum amount of transaction that occured
+**25,50,75%** = percentile values i.e,
+1. 25 percentage of the transactions are less than 5.65 dollars
+2. 50 percentage of the transactions are less than 22 dollars 
+3. and 75 percentage of the transactions are less than 77.05 dollars
+**max** = maximum value of transaction occured
+'''
+print(fraud_transactions.Amount.describe())
+
+# Comparing the values of both transactions
+print(credit_card_data.groupby('Class').mean())
+
+'''
+Under Sampling
+Building a similar dataset containg similar distribution of normal and fraud transactions
+Number of Fraud Transactions --> 492
+
+Number of Legit Transactions --> 284315
+'''
+legit_sample = legit_transactions.sample(n = 492)
+
+#Concatenating two DataFrames
+new_dataset = pd.concat([legit_sample, fraud_transactions], axis=0)
+
+print(new_dataset.head())
+
+print(new_dataset['Class'].value_counts())
+print(new_dataset.groupby('Class').mean())
+
+X = new_dataset.drop(columns='Class', axis=1)
+Y = new_dataset['Class']
+print(X)
+print(Y)
+
+#Splitting the data into training and testing data
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, stratify=Y, random_state=2)
+print(X.shape, X_train.shape, X_test.shape)
+
+#Model Regression
+#Logistic Regression
+model = LogisticRegression()
+# training the Logistic Regression Model with Training Data
+model.fit(X_train, Y_train)
+
+#Model Evaluation
+#Accuracy Score
+
+# accuracy on training data
+X_train_prediction = model.predict(X_train)
+training_data_accuracy = accuracy_score(X_train_prediction, Y_train)
+print('Accuracy on Training data : ', training_data_accuracy)
+
+# accuracy on test data
+X_test_prediction = model.predict(X_test)
+test_data_accuracy = accuracy_score(X_test_prediction, Y_test)
+print('Accuracy score on Test Data : ', test_data_accuracy)
